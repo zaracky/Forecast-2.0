@@ -3,14 +3,25 @@ import boto3
 from pymongo import MongoClient
 from datetime import datetime
 from io import BytesIO
+from dotenv import load_dotenv
+import os
+
+# Charger les variables depuis le fichier .env
+load_dotenv()
+
+# Récupération des variables d'environnement
+AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY')
+MONGO_URI = os.getenv('MONGO_URI')
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 # Connexion MongoDB
-client = MongoClient("mongodb://localhost:27017/")  # Remplace par ton URL MongoDB si nécessaire
+client = MongoClient(MONGO_URI)  # Utilisation de l'URI MongoDB depuis .env
 db = client.weather_data
 collection = db.weather_stations
 
-# Connexion S3 (remplace par tes identifiants AWS)
-s3_client = boto3.client('s3', aws_access_key_id='YOUR_ACCESS_KEY', aws_secret_access_key='YOUR_SECRET_KEY')
+# Connexion S3 avec les clés d'accès depuis .env
+s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
 
 # Métadonnées des stations
 station_metadata = {
@@ -137,12 +148,11 @@ def insert_weather_data(documents):
 
 # Fonction principale
 def main():
-    bucket_name = 'your-s3-bucket-name'  # Remplace par le nom de ton bucket S3
     file_names = ['La_Madeleine.xlsx', 'Ichtegem.xlsx', 'data.json']  # Liste des fichiers dans ton bucket
     
     for file_name in file_names:
         # Traitement des données depuis S3
-        documents = process_weather_data_from_s3(bucket_name, file_name)
+        documents = process_weather_data_from_s3(S3_BUCKET_NAME, file_name)
         
         # Insertion des documents dans MongoDB si nécessaire
         if isinstance(documents, list):  # Vérifie que les documents sont au format attendu
