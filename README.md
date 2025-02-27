@@ -53,6 +53,10 @@ weather-data-processing/
 
 ├── weather_data_processor.py   # Script principal de traitement des données
 
+│── query_time.py            # Contient measure_query_time()
+
+│── data_quality.py          # Contient check_data_quality()
+
 ├── requirements.txt            # Liste des dépendances Python
 
 ├── .env                        # Fichier de configuration des variables d'environnement
