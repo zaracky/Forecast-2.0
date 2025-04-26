@@ -13,32 +13,33 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  transformer:
+  data_transformer:
     build:
       context: .
       dockerfile: Dockerfile.transformer
-    container_name: transformer-script
-    restart: on-failure
+    container_name: data_transformer
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
+      - AWS_REGION=eu-west-3
     volumes:
-      - ./output:/app/output  # Pour générer output/transformed_data.json
+      - ./output:/app/output
+      - ./.env:/app/.env
+    command: python data_transformation.py
 
-  migration:
+  mongo_migration:
     build:
       context: .
       dockerfile: Dockerfile.migration
-    container_name: migration-script
-    restart: on-failure
-    depends_on:
-      - mongodb
-      - transformer
+    container_name: mongo_migration
     environment:
-      - MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/
+      - MONGO_URI=${MONGO_URI}
     volumes:
-      - ./output:/app/output  # Pour lire output/transformed_data.json
+      - ./output:/app/output
+      - ./.env:/app/.env
+    depends_on:
+      - data_transformer
+    command: python mongo_migration.py
 
 volumes:
   mongo_data:
