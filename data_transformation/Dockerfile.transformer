@@ -1,0 +1,22 @@
+FROM python:3.9-slim
+
+# Mise à jour + install outils nécessaires
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    gfortran \
+    libopenblas-dev \
+    liblapack-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+COPY data_transformation.py .
+COPY .env .
+
+RUN pip install --upgrade pip
+RUN pip uninstall -y numpy pandas
+RUN pip install numpy==1.26.4 pandas==2.2.1 boto3 python-dotenv
+
+CMD ["python", "data_transformation.py"]
