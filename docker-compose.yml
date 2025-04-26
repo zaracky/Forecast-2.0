@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+    volumes:
+      - mongo_data:/data/db
+
+  transformer:
+    build:
+      context: .
+      dockerfile: Dockerfile.transformer
+    container_name: transformer-script
+    restart: on-failure
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+    volumes:
+      - ./output:/app/output  # Pour générer output/transformed_data.json
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    container_name: migration-script
+    restart: on-failure
+    depends_on:
+      - mongodb
+      - transformer
+    environment:
+      - MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/
+    volumes:
+      - ./output:/app/output  # Pour lire output/transformed_data.json
+
+volumes:
+  mongo_data:
