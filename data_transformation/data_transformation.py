@@ -108,8 +108,20 @@ def main():
     final_records = final_df.to_dict(orient="records")
 
     # Sauvegarder localement (ou réécrire vers S3 si besoin)
-    with open("transformed_data.json", "w", encoding='utf-8') as f:
+
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_path = os.path.join(output_dir, "transformed_data.json")
+
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(final_records, f, ensure_ascii=False, indent=4)
+
+    print(f"Fichier JSON créé à : {output_path}")
+
+
+    #with open("transformed_data.json", "w", encoding='utf-8') as f:
+    #    json.dump(final_records, f, ensure_ascii=False, indent=4)
 
     print("Transformation terminée. Fichier prêt pour MongoDB.")
 
