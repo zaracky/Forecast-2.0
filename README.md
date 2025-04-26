@@ -1,4 +1,4 @@
-# Weather Data Processing
+# Forecast2 - Projet Data Engineer - GreenAndCoop
 Ce projet consiste à récupérer des fichiers de données météo depuis un bucket S3, à les transformer en fonction des métadonnées de chaque station, et à insérer les données dans une base de données MongoDB. Le script prend en charge différents formats de fichiers (Excel et JSON) et teste l'intégrité des données avant de les importer dans MongoDB.
 
 ## Prérequis
@@ -24,10 +24,11 @@ Assurez-vous que l'environnement virtuel est activé et installez les modules n�
 
 ### 3. Configurer les variables d'environnement
 Créez un fichier .env à la racine du projet et remplissez-le avec vos informations sensibles :
-`AWS_ACCESS_KEY=your_aws_access_key`
-`AWS_SECRET_KEY=your_aws_secret_key`
-`MONGO_URI=mongodb://localhost:27017/`
-`S3_BUCKET_NAME=your-s3-bucket-name`
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=eu-west-3
+MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/
+
 
 ## Utilisation
 ### 1. Lancer le script
@@ -49,21 +50,21 @@ Le script va :
 ### 2. Structure du projet
 Le projet contient les fichiers suivants :
 
-weather-data-processing/
+    Forecast2/
+    ├── docker-compose.yml
+    │── .env                # variables d'environnement
+    │── README.md           # doc complète du projet
+    ├── requirements.txt            # Liste des dépendances Python
+    ├── .env                        # Fichier de configuration des variables d'environnement
+    ├── output/             # dossier de fichiers générés (monté par Docker)
+     └── transformed_data.json 
+    ├── data_transformation/
+    │   ├── Dockerfile      # Dockerfile du service transformer
+    │   └── data_transformation.py
+    ├── mongo_migration/
+    │   ├── Dockerfile      # Dockerfile du service migration
+    │   └── mongo_migration.py
 
-├── weather_data_processor.py   # Script principal de traitement des données
-
-│── query_time.py            # Contient measure_query_time()
-
-│── data_quality.py          # Contient check_data_quality()
-
-├── requirements.txt            # Liste des dépendances Python
-
-├── .env                        # Fichier de configuration des variables d'environnement
-
-├── README.md                   # Documentation du projet
-
-└── data/                       # Dossier contenant les fichiers récupérés depuis S3
 
 ## Fonctionnalités du script
 -Lecture des fichiers S3 : Le script récupère les fichiers météo depuis un bucket S3.
