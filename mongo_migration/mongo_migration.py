@@ -13,13 +13,14 @@ DB_NAME = "forecast2"
 COLLECTION_NAME = "weather_stations"
 JSON_FILE = "output/transformed_data.json"
 
-def wait_for_file(filepath, timeout=30):
+def wait_for_file(filepath, timeout=90):
     """Attend que le fichier soit disponible avant de continuer."""
+    print(f"Attente du fichier {filepath}...")
     start_time = time.time()
     while not os.path.isfile(filepath):
         if time.time() - start_time > timeout:
             raise TimeoutError(f"Timeout while waiting for {filepath}")
-        time.sleep(1)
+        time.sleep(2)
 
 def connect_to_mongo(uri):
     """Connexion à MongoDB."""
@@ -27,9 +28,9 @@ def connect_to_mongo(uri):
     return client
 
 def create_unique_index(collection):
-    """Créer un index unique sur StationID + _airbyte_extracted_at."""
+    """Créer un index unique sur _airbyte_raw_id."""
     collection.create_index(
-        [("StationID", 1), ("_airbyte_extracted_at", 1)],
+        [("_airbyte_raw_id", 1)],
         unique=True
     )
 
@@ -46,8 +47,7 @@ def insert_data(collection, data):
 
     for doc in data:
         query = {
-            "StationID": doc.get("StationID"),
-            "_airbyte_extracted_at": doc.get("_airbyte_extracted_at")
+            "_airbyte_raw_id": doc.get("_airbyte_raw_id")
         }
         if not collection.find_one(query):
             collection.insert_one(doc)
@@ -58,13 +58,18 @@ def insert_data(collection, data):
     print(f"Insertion terminée : {inserted_count} nouveaux documents ajoutés, {skipped_count} doublons ignorés.")
 
 def check_data_quality(collection):
-    """Vérifie la qualité des données (valeurs manquantes, doublons)."""
+    """Vérifie la qualité des données (valeurs manquantes) en excluant les champs techniques."""
     total_documents = collection.count_documents({})
     error_count = 0
 
     for doc in collection.find():
-        if None in doc.values():
-            error_count += 1
+        for key, value in doc.items():
+            # Ignorer les champs techniques
+            if key.startswith("_airbyte_"):
+                continue
+            if value is None:
+                error_count += 1
+                break  # Pas besoin de vérifier toutes les clés si un problème est détecté
 
     if total_documents == 0:
         error_rate = 100
@@ -75,6 +80,8 @@ def check_data_quality(collection):
     print(f"Taux d'erreur : {error_rate:.2f}%")
 
 def main():
+    print("Attente du fichier généré par data_transformer...")
+    time.sleep(30)
     print("Chargement des données JSON...")
     wait_for_file(JSON_FILE)
 
